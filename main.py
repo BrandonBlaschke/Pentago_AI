@@ -3,6 +3,9 @@ from sys import maxsize
 
 
 # Represents one of the 4 boards in the game
+import copy
+
+
 class Board:
     name = None
     rightRot = [6, 3, 0, 7, 4, 1, 8, 5, 2]
@@ -13,7 +16,7 @@ class Board:
         self.tiles = ['*', '*', '*', '*', '*', '*', '*', '*', "*"]
 
     def moveRight(self):
-        print(str(self.name) + " Moving Right")
+        #print(str(self.name) + " Moving Right")
 
         temp = ['*', '*', '*', '*', '*', '*', '*', '*', "*"]
         for i in range(0, 9):
@@ -21,7 +24,7 @@ class Board:
         self.tiles = temp
 
     def moveLeft(self):
-        print(str(self.name) + " Moving Left")
+        #print(str(self.name) + " Moving Left")
 
         temp = ['*', '*', '*', '*', '*', '*', '*', '*', "*"]
         for i in range(0, 9):
@@ -69,25 +72,27 @@ class Game:
 
     def getBoardCopy(self):
         allBoards = []
-        allBoards.append(list(self.block1.tiles))
-        allBoards.append(list(self.block2.tiles))
-        allBoards.append(list(self.block3.tiles))
-        allBoards.append(list(self.block4.tiles))
+        allBoards.append(copy.deepcopy(self.block1))
+        allBoards.append(copy.deepcopy(self.block2))
+        allBoards.append(copy.deepcopy(self.block3))
+        allBoards.append(copy.deepcopy(self.block4))
+
         return allBoards
 
-    def playTurn(self, node):
+    def playTurn(self):
         choice = None
 
         if self.turn:
             if self.player1 == "w":
                 choice = input("Player 1: Enter your move: ")
             elif self.player2 == "w":
+                print("AI thinking...")
                 print("Player 2 is making its move: ", end="")
                 tree = Node(0, 1, "w", 0, game.getBoardCopy(), "")
                 bestChoice = -maxsize
                 decision = None
                 for i in range(len(tree.children)):
-                    val = minMax(tree.children[i], 0, -1)
+                    val = minMax(tree.children[i], 0, 1)
                     if val > bestChoice:
                         bestChoice = val
                         decision = tree.children[i].decision
@@ -97,7 +102,7 @@ class Game:
             if self.player1 == "b":
                 choice = input("Player 1: Enter your move: ")
             elif self.player2 == "b":
-
+                print("AI thinking...")
                 print("Player 2 is making its move: ", end="")
 
                 tree = Node(0, -1, "b", 0, game.getBoardCopy(), "")
@@ -206,24 +211,34 @@ class Node:
 
     def createChildren(self):
         if self.depth < 2:
+            # First 2 loops to get position
             for i in range(0, 4):
                 for j in range(0, 9):
-                    if self.boards[i][j] == '*':
-                        choice = str(i + 1) + "/" + str(j + 1) + " " + str(random.randint(1, 4)) + self.rotate()
-                        tempBoards = self.copyBoards()
-                        tempBoards[i][j] = self.playerColor
-                        self.children.append(Node(self.depth + 1,
-                                                  self.playerNum * -1,
-                                                  self.switchColor(),
-                                                  self.realValue(),
-                                                  list(tempBoards), choice))
+                    # Next 2 loops to get rotations
+                    for k in range(0, 4):
+                        for l in range(0, 2):
+
+                            if self.boards[i].tiles[j] == '*':
+                                rot = self.rotate(l)
+                                choice = str(i + 1) + "/" + str(j + 1) + " " + str(random.randint(1, 4)) + rot
+                                tempBoards = self.copyBoards()
+                                tempBoards[i].placePiece(self.playerColor, j)
+                                if rot == "L":
+                                    tempBoards[k].moveLeft()
+                                else:
+                                    tempBoards[k].moveRight()
+
+                                self.children.append(Node(self.depth + 1,
+                                                          self.playerNum * -1,
+                                                          self.switchColor(),
+                                                          self.realValue(),
+                                                          list(tempBoards), choice))
 
     def realValue(self):
         return 1
 
-    def rotate(self):
-        rot = random.randint(1, 2)
-        if rot == 1:
+    def rotate(self, int):
+        if int == 1:
             return "L"
         else:
             return "R"
@@ -235,12 +250,13 @@ class Node:
             return "w"
 
     def copyBoards(self):
-        copy = []
-        copy.append(list(self.boards[0]))
-        copy.append(list(self.boards[1]))
-        copy.append(list(self.boards[2]))
-        copy.append(list(self.boards[3]))
-        return copy
+        dc = []
+        dc.append(copy.deepcopy(self.boards[0]))
+        dc.append(copy.deepcopy(self.boards[1]))
+        dc.append(copy.deepcopy(self.boards[2]))
+        dc.append(copy.deepcopy(self.boards[3]))
+
+        return dc
 
 
 # MinMax Algorithm to get move
@@ -271,16 +287,16 @@ def minMax(node, depth, playerNum):
 game = Game()
 
 # Generate the game tree
-tree = None
-maxPlayer = 0
-if game.player1 == "w":
-    tree = Node(0, -1, "w", 0, game.getBoardCopy(), "")
-    maxPlayer = -1
-else:
-    tree = Node(0, 1, "w", 0, game.getBoardCopy(), "")
-    maxPlayer = 1
+# tree = None
+# maxPlayer = 0
+# if game.player1 == "w":
+#     tree = Node(0, -1, "w", 0, game.getBoardCopy(), "")
+#     maxPlayer = -1
+# else:
+#     tree = Node(0, 1, "w", 0, game.getBoardCopy(), "")
+#     maxPlayer = 1
 
 # Play game
 while not game.gameOver:
-    game.playTurn(tree)
+    game.playTurn()
     # print("MINMAX RESULT: " + str(minMax(tree, 0, maxPlayer)))
