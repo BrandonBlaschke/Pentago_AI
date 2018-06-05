@@ -92,7 +92,7 @@ class Game:
                 bestChoice = -maxsize
                 decision = None
                 for i in range(len(tree.children)):
-                    val = minMax(tree.children[i], 0, 1)
+                    val = minMax(tree.children[i], 0, -1)
                     if val > bestChoice:
                         bestChoice = val
                         decision = tree.children[i].decision
@@ -110,6 +110,7 @@ class Game:
                 decision = None
                 for i in range(len(tree.children)):
                     val = minMax(tree.children[i], 0, -1)
+                    print("VAL " + str(val))
                     if val > bestChoice:
                         bestChoice = val
                         decision = tree.children[i].decision
@@ -235,7 +236,37 @@ class Node:
                                                           list(tempBoards), choice))
 
     def realValue(self):
-        return 1
+
+        # Check for pairs of...
+
+        return random.randint(0, 100)
+
+    def findMathcing(self, index, board):
+        count = 1
+
+        # current piece to check aginst others
+        current = board[index]
+
+        if current == self.playerColor:
+
+            # checking bottom
+            if index + 6 < 35:
+                if current == board[index + 6]:
+                    count += 1
+            # Checking top
+            if index - 6 > 0:
+                if current == board[index - 6]:
+                    count += 1
+            # Checking right
+            if index + 1 < 35 and index % 5 != 0:
+                if current == board[index + 1]:
+                    count += 1
+            # Checking left
+            if index - 1 > 0 and index % 6 != 0:
+                if current == board[index - 1]:
+                    count += 1
+        return count
+
 
     def rotate(self, int):
         if int == 1:
