@@ -63,11 +63,18 @@ class Game:
         choose = random.randint(0, 1)
         if choose:
             print("Your Turn: Player 1")
+            file.write("Player 1: You - White")
+            file.write("\n")
+            file.write("Player 2: AI - Black\n\n")
             self.player1 = "w"
             self.player2 = "b"
         else:
             self.player1 = "b"
             self.player2 = "w"
+            file.write("Player 1: AI - White")
+            file.write("\n")
+            file.write("Player 2: You - Black")
+            file.write("\n\n")
             print("AI's turn")
 
     def getBoardCopy(self):
@@ -85,6 +92,7 @@ class Game:
         if self.turn:
             if self.player1 == "w":
                 choice = input("Player 1: Enter your move: ")
+                file.write("Player 1 (w) made the move: " + choice + "\n")
             elif self.player2 == "w":
                 print("AI thinking...")
                 print("Player 2 is making its move: ", end="")
@@ -98,9 +106,11 @@ class Game:
                         decision = tree.children[i].decision
                 choice = decision
                 print(choice)
+                file.write("Player 2 (w) made the move: " + choice + "\n")
         else:
             if self.player1 == "b":
                 choice = input("Player 1: Enter your move: ")
+                file.write("Player 1 (b) made the move: " + choice + "\n")
             elif self.player2 == "b":
                 print("AI thinking...")
                 print("Player 2 is making its move: ", end="")
@@ -115,6 +125,7 @@ class Game:
                         decision = tree.children[i].decision
                 choice = decision
                 print(choice)
+                file.write("Player 2 (b) made the move: " + choice + "\n")
         if choice is not None:
             place, rot = choice.split(" ")
 
@@ -300,12 +311,15 @@ class Game:
         if streakw >= 5 and streakb >= 5:
             self.gameOver = True
             print("TIE")
+            file.write("\nTIE\n")
         elif streakw >= 5:
             self.gameOver = True
             print("WINNER: W")
+            file.write("\nWINNER: W\n")
         elif streakb >= 5:
             self.gameOver = True
             print("WINNNER: B")
+            file.write("\nWINNER: B\n")
 
         # Lastly check for a tie game
         for i in range(0, 35):
@@ -314,34 +328,55 @@ class Game:
         if tie:
             self.gameOver = True
             print("TIE")
+            file.write("\nTIE\n")
 
     def printGame(self):
         print("+-------+-------+")
+        file.write("+-------+-------+\n")
         for i in range(0, 9, 3):
             print("|", end="")
+            file.write("|")
             print(" " + self.block1.tiles[i], end="")
+            file.write(" " + self.block1.tiles[i])
             print(" " + self.block1.tiles[i + 1], end="")
+            file.write(" " + self.block1.tiles[i + 1])
             print(" " + self.block1.tiles[i + 2], end="")
+            file.write(" " + self.block1.tiles[i + 2])
             print(" " + "|", end="")
+            file.write(" |")
             print(" " + self.block2.tiles[i], end="")
+            file.write(" " + self.block2.tiles[i])
             print(" " + self.block2.tiles[i + 1], end="")
+            file.write(" " + self.block2.tiles[i + 1])
             print(" " + self.block2.tiles[i + 2], end="")
+            file.write(" " + self.block2.tiles[i + 2])
             print(" " + "|", end="")
+            file.write(" |\n")
             print()
         print("+-------+-------+")
+        file.write("+-------+-------+\n")
         for i in range(0, 9, 3):
             print("|", end="")
+            file.write("|")
             print(" " + self.block3.tiles[i], end="")
+            file.write(" " + self.block3.tiles[i])
             print(" " + self.block3.tiles[i + 1], end="")
+            file.write(" " + self.block3.tiles[i + 1])
             print(" " + self.block3.tiles[i + 2], end="")
+            file.write(" " + self.block3.tiles[i + 2])
             print(" " + "|", end="")
+            file.write(" |")
             print(" " + self.block4.tiles[i], end="")
+            file.write(" " + self.block4.tiles[i])
             print(" " + self.block4.tiles[i + 1], end="")
+            file.write(" " + self.block4.tiles[i + 1])
             print(" " + self.block4.tiles[i + 2], end="")
+            file.write(" " + self.block4.tiles[i + 2])
             print(" " + "|", end="")
+            file.write(" |\n")
             print()
         print("+-------+-------+")
-
+        file.write("+-------+-------+\n")
 
 # Represents a Node in the tree
 class Node:
@@ -502,9 +537,13 @@ def minMax(node, depth, playerNum):
 
 ############ MAIN PROGRAM #############
 
+file = open("Output.txt", "w")
+
 # Start game
 game = Game()
 
 # Play game
 while not game.gameOver:
     game.playTurn()
+
+file.close()
