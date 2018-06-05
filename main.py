@@ -92,7 +92,7 @@ class Game:
                 bestChoice = -maxsize
                 decision = None
                 for i in range(len(tree.children)):
-                    val = minMax(tree.children[i], 0, -1)
+                    val = minMaxAlphaBeta(tree.children[i], 0, -maxsize, maxsize, -1)
                     if val > bestChoice:
                         bestChoice = val
                         decision = tree.children[i].decision
@@ -109,8 +109,7 @@ class Game:
                 bestChoice = -maxsize
                 decision = None
                 for i in range(len(tree.children)):
-                    val = minMax(tree.children[i], 0, -1)
-                    print("VAL " + str(val))
+                    val = minMaxAlphaBeta(tree.children[i], 0, -maxsize, maxsize, -1)
                     if val > bestChoice:
                         bestChoice = val
                         decision = tree.children[i].decision
@@ -126,6 +125,8 @@ class Game:
                 self.doMove(self.player2, int(place[0]), int(place[2]), int(rot[0]), rot[1])
                 self.turn = 1
         self.printGame()
+
+        self.checkWinner()
 
     def getBlock(self, num):
         if num == 1:
@@ -163,6 +164,156 @@ class Game:
         else:
             print("INVALID piece already there")
             return False
+
+    # Check the winner of the game
+    def checkWinner(self):
+
+        # Copy the game board into 1D array for easy checking
+
+        board = []
+
+        board.extend(copy.deepcopy(self.block1.tiles[0:3]))
+        board.extend(copy.deepcopy(self.block2.tiles[0:3]))
+
+        board.extend(copy.deepcopy(self.block1.tiles[3:6]))
+        board.extend(copy.deepcopy(self.block2.tiles[3:6]))
+
+        board.extend(copy.deepcopy(self.block1.tiles[6:]))
+        board.extend(copy.deepcopy(self.block2.tiles[6:]))
+
+        board.extend(copy.deepcopy(self.block3.tiles[0:3]))
+        board.extend(copy.deepcopy(self.block4.tiles[0:3]))
+
+        board.extend(copy.deepcopy(self.block3.tiles[3:6]))
+        board.extend(copy.deepcopy(self.block4.tiles[3:6]))
+
+        board.extend(copy.deepcopy(self.block3.tiles[6:]))
+        board.extend(copy.deepcopy(self.block4.tiles[6:]))
+
+
+        countb = 0
+        streakb = 0
+
+        countw = 0
+        streakw = 0
+
+        tie = True
+
+        # Check Vertical
+        for i in range(0, 6):
+            for j in range(0, 6):
+                mul = j * 6
+                if board[i + mul] == 'w':
+                    countw += 1
+                else:
+                    if countw > streakw:
+                        streakw = countw
+                    countw = 0
+
+                if board[i + mul] == 'b':
+                    countb += 1
+                else:
+                    if countb > streakb:
+                        streakb = countb
+                    countb = 0
+        countw = 0
+        countb = 0
+
+        # Check Horizontal
+        for i in range(0, 6):
+            for j in range(0, 6):
+                mul = i * 6
+                if board[mul + j] == 'w':
+                    countw += 1
+                else:
+                    if countw > streakw:
+                        streakw = countw
+                    countw = 0
+                if board[mul + j] == 'b':
+                    countb += 1
+                else:
+                    if countb > streakb:
+                        streakb = countb
+                    countb = 0
+
+        countw = 0
+        countb = 0
+
+        # Check Diagonal Right
+        for i in range(0, 3):
+
+            start = i
+            if i == 2:
+                start = 6
+
+            countw = 0
+            countb = 0
+            for j in range(0, 6):
+
+                mul = j * 7
+                if start == 1 or start == 6 and j == 5:
+                    break
+                if board[start + mul] == 'w':
+                    countw += 1
+                else:
+                    if countw > streakw:
+                        streakw = countw
+                    countw = 0
+                if board[start + mul] == 'b':
+                    countb += 1
+                else:
+                    if countb > streakb:
+                        streakb = countb
+                    countb = 0
+
+        countw = 0
+        countb = 0
+
+        # Check Diagonal Left
+        for i in range(4, 7):
+
+            start = i
+            if i == 6:
+                start = 11
+
+            countw = 0
+            countb = 0
+            for j in range(0, 6):
+
+                mul = j * 5
+                if start == 4 or start == 11 and j == 5:
+                    break
+                if board[start + mul] == 'w':
+                    countw += 1
+                else:
+                    if countw > streakw:
+                        streakw = countw
+                    countw = 0
+                if board[start + mul] == 'b':
+                    countb += 1
+                else:
+                    if countb > streakb:
+                        streakb = countb
+                    countb = 0
+
+        # Check if winner
+        if streakw >= 5 and streakb >= 5:
+            self.gameOver = True
+            print("TIE")
+        elif streakw >= 5:
+            self.gameOver = True
+            print("WINNER: W")
+        elif streakb >= 5:
+            self.gameOver = True
+            print("WINNNER: B")
+
+        # Lastly check for a tie game
+        for i in range(0, 35):
+            if board[i] == '*':
+                tie = False
+        if tie:
+            self.gameOver = True
+            print("TIE")
 
     def printGame(self):
         print("+-------+-------+")
@@ -290,6 +441,45 @@ class Node:
         return dc
 
 
+# MinMax with Alpha Beta Pruning
+def minMaxAlphaBeta(node, depth, alpha, beta, playerNum):
+    if depth == 2 or len(node.children) == 0:
+        return node.value
+
+    # Max player
+    if playerNum == 1:
+        value = -maxsize
+        for i in node.children:
+            rec = minMaxAlphaBeta(i, depth + 1, alpha, beta, -1)
+            value = maxVal(value, rec)
+            alpha = maxVal(alpha, value)
+            if beta <= alpha:
+                break
+        return value
+
+    # Min Player
+    if playerNum == -1:
+        value = maxsize
+        for i in node.children:
+            rec = minMaxAlphaBeta(i, depth + 1, alpha, beta, 1)
+            value = minVal(value, rec)
+            beta = minVal(beta, value)
+            if beta <= alpha:
+                break
+        return value
+
+def minVal(val1, val2):
+    if val1 <= val2:
+        return val1
+    elif val2 <= val1:
+        return val2
+
+def maxVal(val1, val2):
+    if val1 > val2:
+        return val1
+    elif val2 > val1:
+        return val2
+
 # MinMax Algorithm to get move
 def minMax(node, depth, playerNum):
     if depth == 2 or len(node.children) == 0:
@@ -310,24 +500,11 @@ def minMax(node, depth, playerNum):
                 bestValue = v
         return bestValue
 
-
 ############ MAIN PROGRAM #############
-
 
 # Start game
 game = Game()
 
-# Generate the game tree
-# tree = None
-# maxPlayer = 0
-# if game.player1 == "w":
-#     tree = Node(0, -1, "w", 0, game.getBoardCopy(), "")
-#     maxPlayer = -1
-# else:
-#     tree = Node(0, 1, "w", 0, game.getBoardCopy(), "")
-#     maxPlayer = 1
-
 # Play game
 while not game.gameOver:
     game.playTurn()
-    # print("MINMAX RESULT: " + str(minMax(tree, 0, maxPlayer)))
