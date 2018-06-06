@@ -1,0 +1,11 @@
+run main.py in the command prompt to start the game
+
+1. The game will randomly choose a player to player, either the AI goes first or you the player
+
+2. It will ask you to enter a move in, type in the block#/position# block#rotation
+	Like 4/4 3l
+
+3. It will print the board to the command line to view and the AI will calculate its next move
+
+4. first to 5 in a row wins, once a winner is detected or a Tie it ends the program and exorts a 
+Output.txt file with the history of the game. 

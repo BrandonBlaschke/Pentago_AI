@@ -100,6 +100,8 @@ class Game:
                 bestChoice = -maxsize
                 decision = None
                 for i in range(len(tree.children)):
+
+                    # val = minMax(tree.children[i], 0, -1)
                     val = minMaxAlphaBeta(tree.children[i], 0, -maxsize, maxsize, -1)
                     if val > bestChoice:
                         bestChoice = val
@@ -115,11 +117,13 @@ class Game:
                 print("AI thinking...")
                 print("Player 2 is making its move: ", end="")
 
-                tree = Node(0, -1, "b", 0, game.getBoardCopy(), "")
+                tree = Node(0, 1, "b", 0, game.getBoardCopy(), "")
                 bestChoice = -maxsize
                 decision = None
                 for i in range(len(tree.children)):
-                    val = minMaxAlphaBeta(tree.children[i], 0, -maxsize, maxsize, -1)
+
+                    # val = minMax(tree.children[i], 0, -1)
+                    val = minMaxAlphaBeta(tree.children[i], 0, -maxsize, maxsize, 1)
                     if val > bestChoice:
                         bestChoice = val
                         decision = tree.children[i].decision
@@ -127,14 +131,22 @@ class Game:
                 print(choice)
                 file.write("Player 2 (b) made the move: " + choice + "\n")
         if choice is not None:
-            place, rot = choice.split(" ")
+            try:
+                place, rot = choice.split(" ")
+                if self.turn:
+                    report = self.doMove(self.player1, int(place[0]), int(place[2]), int(rot[0]), rot[1])
+                    if not report:
+                        print("Try Again")
+                        file.write("\nTry Again\n")
+                    else:
+                        self.turn = 0
+                else:
+                    self.doMove(self.player2, int(place[0]), int(place[2]), int(rot[0]), rot[1])
+                    self.turn = 1
+            except ValueError:
+                print("Wrong Characters")
+                file.write("\nWrong Characters\n")
 
-            if self.turn:
-                self.doMove(self.player1, int(place[0]), int(place[2]), int(rot[0]), rot[1])
-                self.turn = 0
-            else:
-                self.doMove(self.player2, int(place[0]), int(place[2]), int(rot[0]), rot[1])
-                self.turn = 1
         self.printGame()
 
         self.checkWinner()
@@ -153,11 +165,13 @@ class Game:
 
         # Check input
         if block < 1 or block2 < 1 or block > 4 or block2 > 4 or pos < 1 or pos > 9:
-            print("INVALID block/position")
+            print("\nINVALID block/position\n")
+            file.write("\nINVALID block/position")
             return False
 
         if not (dir == "L" or dir == "l" or dir == "R" or dir == "r"):
             print("INVALID direction")
+            file.write("\nINVALID direction\n")
             return False
 
         # do move
@@ -174,6 +188,7 @@ class Game:
             return True
         else:
             print("INVALID piece already there")
+            file.write("\nINVALID piece already there\n")
             return False
 
     # Check the winner of the game
@@ -227,6 +242,12 @@ class Game:
                     if countb > streakb:
                         streakb = countb
                     countb = 0
+                if countw > streakw:
+                    streakw = countw
+                if countb > streakb:
+                    streakb = countb
+
+
         countw = 0
         countb = 0
 
@@ -246,6 +267,10 @@ class Game:
                     if countb > streakb:
                         streakb = countb
                     countb = 0
+                if countw > streakw:
+                    streakw = countw
+                if countb > streakb:
+                    streakb = countb
 
         countw = 0
         countb = 0
@@ -276,6 +301,10 @@ class Game:
                     if countb > streakb:
                         streakb = countb
                     countb = 0
+                if countw > streakw:
+                    streakw = countw
+                if countb > streakb:
+                    streakb = countb
 
         countw = 0
         countb = 0
@@ -306,6 +335,10 @@ class Game:
                     if countb > streakb:
                         streakb = countb
                     countb = 0
+                if countw > streakw:
+                    streakw = countw
+                if countb > streakb:
+                    streakb = countb
 
         # Check if winner
         if streakw >= 5 and streakb >= 5:
@@ -415,17 +448,82 @@ class Node:
                                 else:
                                     tempBoards[k].moveRight()
 
-                                self.children.append(Node(self.depth + 1,
-                                                          self.playerNum * -1,
-                                                          self.switchColor(),
-                                                          self.realValue(),
-                                                          list(tempBoards), choice))
+                                tempNode = Node(self.depth + 1, self.playerNum + -1, self.switchColor(), 0, list(tempBoards), choice)
+                                tempNode.value = tempNode.realValue()
+                                self.children.append(tempNode)
 
     def realValue(self):
 
         # Check for pairs of...
+        # Copy the game board into 1D array for easy checking
 
-        return random.randint(0, 100)
+        board = []
+
+        board.extend(copy.deepcopy(self.boards[0].tiles[0:3]))
+        board.extend(copy.deepcopy(self.boards[1].tiles[0:3]))
+
+        board.extend(copy.deepcopy(self.boards[0].tiles[3:6]))
+        board.extend(copy.deepcopy(self.boards[1].tiles[3:6]))
+
+        board.extend(copy.deepcopy(self.boards[0].tiles[6:]))
+        board.extend(copy.deepcopy(self.boards[1].tiles[6:]))
+
+        board.extend(copy.deepcopy(self.boards[2].tiles[0:3]))
+        board.extend(copy.deepcopy(self.boards[3].tiles[0:3]))
+
+        board.extend(copy.deepcopy(self.boards[2].tiles[3:6]))
+        board.extend(copy.deepcopy(self.boards[3].tiles[3:6]))
+
+        board.extend(copy.deepcopy(self.boards[2].tiles[6:]))
+        board.extend(copy.deepcopy(self.boards[3].tiles[6:]))
+
+        countb = 0
+        streakb = 0
+
+        countw = 0
+        streakw = 0
+
+        tie = True
+
+        # Check Vertical
+        for i in range(0, 6):
+            for j in range(0, 6):
+                mul = j * 6
+                if board[i + mul] == 'w':
+                    countw += 1
+                else:
+                    if countw > streakw:
+                        streakw = countw
+                    countw = 0
+
+                if board[i + mul] == 'b':
+                    countb += 1
+                else:
+                    if countb > streakb:
+                        streakb = countb
+                    countb = 0
+        countw = 0
+        countb = 0
+
+        # Check Horizontal
+        for i in range(0, 6):
+            for j in range(0, 6):
+                mul = i * 6
+                if board[mul + j] == 'w':
+                    countw += 1
+                else:
+                    if countw > streakw:
+                        streakw = countw
+                    countw = 0
+                if board[mul + j] == 'b':
+                    countb += 1
+                else:
+                    if countb > streakb:
+                        streakb = countb
+                    countb = 0
+
+        finalVal = maxVal(streakw, streakb)
+        return finalVal
 
     def findMathcing(self, index, board):
         count = 1
@@ -478,6 +576,14 @@ class Node:
 
 # MinMax with Alpha Beta Pruning
 def minMaxAlphaBeta(node, depth, alpha, beta, playerNum):
+
+    global depthMMAB1
+    global depthMMAB2
+    if depth == 0:
+        depthMMAB1 += 1
+    elif depth == 1:
+        depthMMAB2 += 1
+
     if depth == 2 or len(node.children) == 0:
         return node.value
 
@@ -504,19 +610,38 @@ def minMaxAlphaBeta(node, depth, alpha, beta, playerNum):
         return value
 
 def minVal(val1, val2):
+    if val1 == None:
+        return val2
+    elif val2 == None:
+        return val1
+
     if val1 <= val2:
         return val1
     elif val2 <= val1:
         return val2
+    elif val2 == val1:
+        return val1
 
 def maxVal(val1, val2):
     if val1 > val2:
         return val1
     elif val2 > val1:
         return val2
+    elif val1 == val2:
+        return val1
+
 
 # MinMax Algorithm to get move
 def minMax(node, depth, playerNum):
+
+    global depthMM1
+    global depthMM2
+
+    if depth == 0:
+        depthMM1 += 1
+    elif depth == 1:
+        depthMM2 += 1
+
     if depth == 2 or len(node.children) == 0:
         return node.value
 
@@ -524,6 +649,7 @@ def minMax(node, depth, playerNum):
         bestValue = -maxsize
         for i in node.children:
             v = minMax(i, depth + 1, -1)
+            if v == None: v = 0
             if v > bestValue:
                 bestValue = v
         return bestValue
@@ -531,19 +657,37 @@ def minMax(node, depth, playerNum):
         bestValue = maxsize
         for i in node.children:
             v = minMax(i, depth + 1, 1)
+            if v == None: v = 0
             if v < bestValue:
                 bestValue = v
         return bestValue
 
 ############ MAIN PROGRAM #############
 
+depthMM1 = 0
+depthMM2 = 0
+
+depthMMAB1 = 0
+depthMMAB2 = 0
+
 file = open("Output.txt", "w")
 
 # Start game
 game = Game()
+game.printGame()
 
 # Play game
 while not game.gameOver:
     game.playTurn()
+    # print("Nodes expanded at depth 1 in MinMax:: " + str(depthMM1))
+    # print("Nodes expanded at depth 2 in MinMax:: " + str(depthMM2))
+    #
+    # print("Nodes expanded at depth 1 in MinMax AlphaBeta: " + str(depthMMAB1))
+    # print("Nodes expanded at depth 2 in MinMax AlphaBeta: " + str(depthMMAB2))
 
+    depthMM1 = 0
+    depthMM2 = 0
+
+    depthMMAB1 = 0
+    depthMMAB2 = 0
 file.close()
